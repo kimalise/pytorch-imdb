@@ -8,9 +8,6 @@ SEED = 1
 PAD = '<PAD>'
 OOV = '<OOV>'
 
-# train 550000 + dev 50000, test 2000
-DEV_INDEX = 550000
-
 def read_file(file_name):
     lines = []
     with open(file_name) as f:
@@ -37,11 +34,19 @@ def convert_sentences_to_index(sents, word2idx):
     #
     # return sents_idx
 
-def load_imdb_data():
+def load_imdb_data(sample=False):
     print('start loading imdb data')
 
-    imdb_neg_file = "./data/imdb.neg"
-    imdb_pos_file = "./data/imdb.pos"
+    if sample:
+        imdb_neg_file = "./data/imdb.sample.neg"
+        imdb_pos_file = "./data/imdb.sample.pos"
+        # train 9000 + dev 1000, test 2000
+        DEV_INDEX = 9000
+    else:
+        imdb_neg_file = "./data/imdb.neg"
+        imdb_pos_file = "./data/imdb.pos"
+        # train 550000 + dev 50000, test 2000
+        DEV_INDEX = 550000
 
     neg_sents = read_file(imdb_neg_file)
     pos_sents = read_file(imdb_pos_file)
@@ -63,7 +68,7 @@ def load_imdb_data():
     sents_idx = convert_sentences_to_index(sents, word2idx)
 
     x_train, y_train = sents_idx[:DEV_INDEX], labels[:DEV_INDEX]
-    x_dev, y_dev = sents_idx[DEV_INDEX:], labels[DEV_INDEX]
+    x_dev, y_dev = sents_idx[DEV_INDEX:], labels[DEV_INDEX:]
 
     # load test data
     x_test, y_test = load_imdb_test_data(word2idx)
@@ -142,7 +147,8 @@ class IMDBDataset:
         return seq_padded, seq_lengths, outputs
 
 if __name__ == '__main__':
-    data = load_imdb_data()
+
+    data = load_imdb_data(sample=True)
     x_train, y_train, x_dev, y_dev, x_test, y_test, word2idx, idx2word = data
 
     train_dataset = IMDBDataset(x_train[:15], y_train[:15], word2idx, idx2word, batch_size=10, shuffle=True)
